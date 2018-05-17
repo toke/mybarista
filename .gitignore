@@ -21,4 +21,6 @@
 # Auto-generated tag files
 tags
 
+*.lock
+vendor/*
 mybarista
