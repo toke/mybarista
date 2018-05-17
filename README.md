@@ -23,8 +23,12 @@ Current Fields:
 
 Build:
 
-`go build mybarista`
+```
+go build mybarista
+```
 
+I actually use [dep](https://golang.github.io/dep/) for tracking dependencies,
+use `dep ensure` and `go build` for using this exact versions.
 
 i3 / sway configuraion:
 ```
