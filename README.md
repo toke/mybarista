@@ -21,11 +21,7 @@ Current Fields:
 
 ## Installation
 
-Build:
-
-```
-go build mybarista
-```
+`go get https://github.com/toke/mybarista`
 
 I actually use [dep](https://golang.github.io/dep/) for tracking dependencies,
 use `dep ensure` and `go build` for using this exact versions.
@@ -39,4 +35,7 @@ bar {
 }
 ```
 
+## Other work
+
+ * https://github.com/glebtv/custom_barista
 
