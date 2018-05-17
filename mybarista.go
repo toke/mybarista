@@ -17,23 +17,23 @@ package main
 
 import (
 	"fmt"
-        "image/color"
+	"image/color"
+	"io/ioutil"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
-        "io/ioutil"
-        "strconv"
-        "strings"
 
-        "github.com/martinlindhe/unit"
+	"github.com/martinlindhe/unit"
 	"github.com/soumya92/barista"
 	"github.com/soumya92/barista/bar"
 	"github.com/soumya92/barista/colors"
-	"github.com/soumya92/barista/modules/funcs"
 	"github.com/soumya92/barista/modules/battery"
 	"github.com/soumya92/barista/modules/clock"
 	"github.com/soumya92/barista/modules/cputemp"
+	"github.com/soumya92/barista/modules/funcs"
 	"github.com/soumya92/barista/modules/group"
 	"github.com/soumya92/barista/modules/media"
 	"github.com/soumya92/barista/modules/meminfo"
@@ -130,15 +130,15 @@ func main() {
 	})
 
 	localtime := clock.Local().
-            OutputFunc(time.Second, func(now time.Time) bar.Output {
-		return outputs.Pango(
-			material.Icon("today", pango.Color(colors.Scheme("dim-icon"))...), spacer,
-			now.Format("Mon Jan 2 "),
-			material.Icon("access-time", pango.Color(colors.Scheme("dim-icon"))...), spacer,
-			now.Format("15:04:05"),
-		)
-	})
-        localtime.OnClick(func(e bar.Event) {
+		OutputFunc(time.Second, func(now time.Time) bar.Output {
+			return outputs.Pango(
+				material.Icon("today", pango.Color(colors.Scheme("dim-icon"))...), spacer,
+				now.Format("Mon Jan 2 "),
+				material.Icon("access-time", pango.Color(colors.Scheme("dim-icon"))...), spacer,
+				now.Format("15:04:05"),
+			)
+		})
+	localtime.OnClick(func(e bar.Event) {
 		if e.Button == bar.ButtonLeft {
 			exec.Command("gsimplecal").Run()
 		}
@@ -232,7 +232,7 @@ func main() {
 		}
 		return out
 	})
-        loadAvg.OnClick(startTaskManager)
+	loadAvg.OnClick(startTaskManager)
 
 	freeMem := meminfo.New().OutputFunc(func(m meminfo.Info) bar.Output {
 		out := outputs.Pango(material.Icon("memory"), outputs.IBytesize(m.Available()))
@@ -249,7 +249,7 @@ func main() {
 		}
 		return out
 	})
-        freeMem.OnClick(startTaskManager)
+	freeMem.OnClick(startTaskManager)
 
 	temp := cputemp.DefaultZone().
 		RefreshInterval(2 * time.Second).
@@ -316,8 +316,7 @@ func main() {
 		return out
 	})
 
-
-        thirtySeconds, _ := time.ParseDuration("30s")
+	thirtySeconds, _ := time.ParseDuration("30s")
 	backlight := funcs.Every(thirtySeconds, func(m funcs.Channel) {
 		maxBrightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/max_brightness")
 		brightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/brightness")
@@ -342,7 +341,7 @@ func main() {
 
 		m.Output(outputs.Pango(
 			materialCommunity.Icon("lightbulb"),
-                        spacer,
+			spacer,
 			pango.Textf("%.0f%%", backlightPct),
 		))
 	})
@@ -350,12 +349,12 @@ func main() {
 	g := group.Collapsing()
 
 	panic(barista.Run(
-                rhythmbox,
+		rhythmbox,
 		g.Add(wifi),
 		g.Add(vpn),
 		g.Add(net),
 		g.Add(temp),
-                g.Add(backlight),
+		g.Add(backlight),
 		g.Add(freeMem),
 		g.Button(outputs.Text("+"), outputs.Text("-")),
 		loadAvg,
