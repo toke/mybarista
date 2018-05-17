@@ -5,10 +5,12 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOINSTALL=$(GOCMD) install
+DEPENSURE=dep ensure
 BINARY_NAME=mybarista
 BINARY_UNIX=$(BINARY_NAME)_unix
 
 build:
+	$(DEPENSURE)
 	$(GOBUILD) -o $(BINARY_NAME) -v
 
 install:
