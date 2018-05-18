@@ -87,7 +87,7 @@ func mediaFormatFunc(m media.Info) bar.Output {
 	var iconAndPosition pango.Node
 	if m.PlaybackStatus == media.Playing {
 		iconAndPosition = pango.Span(
-			colors.Hex("#f70"),
+			pango.Color(colors.Hex("#f70")),
 			materialCommunity.Icon("music"),
 			spacer,
 			formatMediaTime(m.Position()),
@@ -283,7 +283,7 @@ func main() {
 			)
 		})
 
-	rhythmbox := media.New("rhythmbox").OutputFunc(mediaFormatFunc)
+	audioplayer := media.New("DeaDBeeF").OutputFunc(mediaFormatFunc)
 	wifi := wlan.New("wlp2s0").OutputFunc(func(w wlan.Info) bar.Output {
 		if w.SSID != "" {
 			return outputs.Pango(
@@ -349,7 +349,7 @@ func main() {
 	g := group.Collapsing()
 
 	panic(barista.Run(
-		rhythmbox,
+		audioplayer,
 		g.Add(wifi),
 		g.Add(vpn),
 		g.Add(net),
