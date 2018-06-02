@@ -10,6 +10,9 @@ deploy:
   provider: releases
   api_key:
     secure: ioyeDldJE6aAr+dBrBHulNqHMiArur+PHxSGPdtXXva7o7v4sY5Xt+79olNrrhfYGkaReV+XEWI75/zJRzJDh1vJB7Z5DLUxyy/vQhEP/kLNDXG8Vad+ClN7qzVLaDaOonexAVt7pSsDthnxqQiP0Oje5Sn6T0hhtPv+4FgzyfDlHijYdmX6RXEuKbEL0/ddfAjc/dYhylPyyhn2uxRvlPcFhyhd3UYhuqwVMYT4xpU3vkXbDv3uTqL/KVJWnajxCVB5VfdAHtG3M9ahbuLSSLfP8sgeui76NZXW8BCa66e+I/8qYg1eomhmmDGU2z7LveH4YcVW2xqOE0x3mC7SybQKkHXk6DzN41EZ/mpSYUX+ouE9KyhED+pPg3M0BH9+q9Qj2U1CH9ax60Ef+amWvXBLM86lUyIMh1DStpl4hAe9URccsOKaCL8gL4RiLdUJtRMDPXULnxAwJBOc++exYzMlVpzer8BkLlfZZyr9dgQhTKXtT1g9obSm54yWV9QuPNYo/24PEUAeRUUtvc2OtgrXnKN2/HAVlxQZ5kqo/dqnqr0JQ9R0HKyAm0+1SMAsIcs8V9MkpflVguxOTyY0Y/JaKI5pn7skM6g79xnVYS0xNUkEDlI/IXi84O4lL6vJ02dJF4rUFsfeO2c9JUFUQq5fk0DosydKH0ziiIuRzMI=
-  file: github.com/toke/mybarista/mybarista
+  file:
+    - github.com/toke/mybarista/mybarista
+    - mybarista
+    - README.md
   on:
     repo: toke/mybarista
