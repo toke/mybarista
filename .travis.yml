@@ -1,7 +1,7 @@
 language: go
 before_install:                                                                 
   - sudo apt-get -qq update
-  - sudo apt-get install -y alsa
+  - sudo apt-get install -y alsa-base libasound2-dev
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh  
   - dep ensure
 go:
