@@ -1,8 +1,15 @@
 language: go
-before_install:                                                                 
-  - sudo apt-get -qq update
-  - sudo apt-get install -y alsa-base libasound2-dev
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh  
-  - dep ensure
+before_install:
+- sudo apt-get -qq update
+- sudo apt-get install -y alsa-base libasound2-dev
+- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+- dep ensure
 go:
-  - "1.10"
+- '1.10'
+deploy:
+  provider: releases
+  api_key:
+    secure: E1D2RysENNe24RpzSpxsAMYOwF7zu51jMayxLaiIziz+dN51WpXYi+n0JHx5eCqHnkSeXI/0oAupRoNHJp7u48y3TlYLXvafsLiQgldara+6Oxfz9X7rVer6B0P5nxNTQd+Smf0KxffJavZ2vzxo3CgQbid+R/lSq8u1ul0KtUUyRxlpxhZEm1FEmmJsNHzaYecVfcXhvArOje/sBHRaYzHTs8cgMH2bMxC1modW87Fblrj9NaoY3E1fHDWIv39e20I01CuhElPuZ2Ynqj6kIr/9HfmOjttyMxAj2A2S0rQotGse6XWztCfMclExHZ7yPVp/+6msXCsq82Sx7W1hfSRcF0WBwkr2qfE3tHWDYC9n1Q4IWRmMq14VT7hwoTcN7ux1H3YSOdgFMixr4Yh7nMJ8wn1kRGHsPCVbWVQ7fIV0x3XcISAroi0qrVeFaf0srT3/DYJeWrKztMtz2nySWetG1AFHqJnAOqeC03wtMNPilzCSIl3ouAx22KAB+FcAcHe7CYGVfmogQF+hTuCPduDWr/JhcvHI2eVjpzz+HiIokVUqpBsw3HQOsObsefazRu5DWaR0au/47uGrYyFrPFCBT1AcG2sPplsD49CS3euSM3tbeeX01lKHyoylFIJZurhJ/Ib25dEAbqiWILgKLhxtC1qepEYls4S7OL/aZqc=
+  file: mybarista
+  on:
+    repo: toke/mybarista
