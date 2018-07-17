@@ -110,6 +110,7 @@ func home(path string) string {
 }
 
 func main() {
+	// See https://materialdesignicons.com/ for a mdi reference
 	material.Load(home(".fonts/material-design-icons"))
 	mdi.Load(home(".fonts/MaterialDesign-Webfont"))
 	typicons.Load(home(".fonts/typicons.font"))
@@ -230,7 +231,7 @@ func main() {
 	loadAvg.OnClick(startTaskManager)
 
 	freeMem := meminfo.New().Output(func(m meminfo.Info) bar.Output {
-		out := outputs.Pango(pango.Icon("mdi-memory"), outputs.IBytesize(m.Available()))
+		out := outputs.Pango(pango.Icon("mdi-memory"), spacer, outputs.IBytesize(m.Available()))
 		freeGigs := m.Available().Gigabytes()
 		switch {
 		case freeGigs < 0.5:
@@ -283,15 +284,12 @@ func main() {
 	wifi := wlan.Any().Output(func(w wlan.Info) bar.Output {
 		switch {
 		case w.Connected():
-			out := fmt.Sprintf("W: (%s)", w.SSID)
-			if len(w.IPs) > 0 {
-				out += fmt.Sprintf(" %s", w.IPs[0])
-			}
-			return outputs.Text(out).Color(colors.Scheme("good"))
+			out := fmt.Sprintf("%s", w.SSID)
+			return outputs.Pango(pango.Icon("mdi-wifi"), spacer, pango.Text(out))
 		case w.Connecting():
-			return outputs.Text("W: connecting...").Color(colors.Scheme("degraded"))
+			return outputs.Pango(pango.Icon("mdi-wifi-off"), spacer, pango.Text("connecting…"))
 		case w.Enabled():
-			return outputs.Text("W: down").Color(colors.Scheme("bad"))
+			return outputs.Pango(pango.Icon("mdi-wifi-off"), spacer, pango.Text("down"))
 		default:
 			return nil
 		}
@@ -328,6 +326,7 @@ func main() {
 			mode = "-charging"
 		}
 		icon := fmt.Sprintf("mdi-battery%s-%.0f", mode, perc)
+
 		if icon == "mdi-battery-100" {
 			icon = "mdi-battery"
 		} else if icon == "mdi-battery-0" {
@@ -395,7 +394,7 @@ func main() {
 		g.Add(temp),
 		//g.Add(backlight),
 		g.Add(freeMem),
-		g.Button(outputs.Text("+"), outputs.Text("-")),
+		g.Button(outputs.Pango(pango.Icon("mdi-chevron-left")), outputs.Pango(pango.Icon("mdi-chevron-right"))),
 		loadAvg,
 		vol,
 		wthr,
