@@ -18,12 +18,10 @@ package main
 import (
 	"fmt"
 	"image/color"
-	"io/ioutil"
+	"math"
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/martinlindhe/unit"
@@ -33,10 +31,10 @@ import (
 	"github.com/soumya92/barista/modules/battery"
 	"github.com/soumya92/barista/modules/clock"
 	"github.com/soumya92/barista/modules/cputemp"
-	"github.com/soumya92/barista/modules/funcs"
 	"github.com/soumya92/barista/modules/group"
 	"github.com/soumya92/barista/modules/media"
 	"github.com/soumya92/barista/modules/meminfo"
+	"github.com/soumya92/barista/modules/netinfo"
 	"github.com/soumya92/barista/modules/netspeed"
 	"github.com/soumya92/barista/modules/sysinfo"
 	"github.com/soumya92/barista/modules/volume"
@@ -46,12 +44,14 @@ import (
 	"github.com/soumya92/barista/modules/wlan"
 	"github.com/soumya92/barista/outputs"
 	"github.com/soumya92/barista/pango"
+	"github.com/soumya92/barista/pango/icons/fontawesome"
 	"github.com/soumya92/barista/pango/icons/ionicons"
 	"github.com/soumya92/barista/pango/icons/material"
-	"github.com/soumya92/barista/pango/icons/material_community"
+	"github.com/soumya92/barista/pango/icons/mdi"
+	"github.com/soumya92/barista/pango/icons/typicons"
 )
 
-var spacer = pango.Span(" ", pango.XXSmall)
+var spacer = pango.Text(" ").XXSmall()
 
 func truncate(in string, l int) string {
 	if len([]rune(in)) <= l {
@@ -84,18 +84,13 @@ func mediaFormatFunc(m media.Info) bar.Output {
 	if len(title) < 20 {
 		artist = truncate(m.Artist, 40-len(title))
 	}
-	var iconAndPosition pango.Node
+	iconAndPosition := pango.Icon("fa-music").Color(colors.Hex("#f70"))
 	if m.PlaybackStatus == media.Playing {
-		iconAndPosition = pango.Span(
-			pango.Color(colors.Hex("#f70")),
-			materialCommunity.Icon("music"),
-			spacer,
-			formatMediaTime(m.Position()),
-			"/",
-			formatMediaTime(m.Length),
+		iconAndPosition.Append(
+			spacer, pango.Textf("%s/%s",
+				formatMediaTime(m.Position()),
+				formatMediaTime(m.Length)),
 		)
-	} else {
-		iconAndPosition = materialCommunity.Icon("music", pango.Color(colors.Hex("#f70"))...)
 	}
 	return outputs.Pango(iconAndPosition, spacer, title, " - ", artist)
 }
@@ -115,12 +110,11 @@ func home(path string) string {
 }
 
 func main() {
-	//material.Load(home("Github/material-design-icons"))
 	material.Load(home(".fonts/material-design-icons"))
-	materialCommunity.Load(home(".fonts/MaterialDesign-Webfont"))
-	//typicons.Load(home(".fonts/typicons.font"))
-	//ionicons.Load(home(".fonts/ionicons"))
-	//fontawesome.Load(home(".fonts/Font-Awesome"))
+	mdi.Load(home(".fonts/MaterialDesign-Webfont"))
+	typicons.Load(home(".fonts/typicons.font"))
+	ionicons.LoadMd(home(".fonts/ionicons"))
+	fontawesome.Load(home(".fonts/Font-Awesome"))
 
 	colors.LoadFromMap(map[string]string{
 		"good":     "#6d6",
@@ -130,11 +124,13 @@ func main() {
 	})
 
 	localtime := clock.Local().
-		OutputFunc(time.Second, func(now time.Time) bar.Output {
+		Output(time.Second, func(now time.Time) bar.Output {
 			return outputs.Pango(
-				material.Icon("today", pango.Color(colors.Scheme("dim-icon"))...), spacer,
+				pango.Icon("material-today").Color(colors.Scheme("dim-icon")),
+				spacer,
 				now.Format("Mon Jan 2 "),
-				material.Icon("access-time", pango.Color(colors.Scheme("dim-icon"))...), spacer,
+				pango.Icon("material-access-time").Color(colors.Scheme("dim-icon")),
+				spacer,
 				now.Format("15:04:05"),
 			)
 		})
@@ -148,7 +144,7 @@ func main() {
 	// https://openweathermap.org/api.
 	wthr := weather.New(
 		openweathermap.Zipcode("76131", "DE").Build(),
-	).OutputFunc(func(w weather.Weather) bar.Output {
+	).Output(func(w weather.Weather) bar.Output {
 		iconName := ""
 		switch w.Condition {
 		case weather.Thunderstorm,
@@ -189,16 +185,15 @@ func main() {
 			iconName = "weather-" + iconName
 		}
 		return outputs.Pango(
-			materialCommunity.Icon(iconName), spacer,
+			pango.Icon("typecn-"+iconName), spacer,
 			pango.Textf("%d℃", int(w.Temperature.Celsius())),
-			//pango.Span(" (provided by ", w.Attribution, ")", pango.XSmall),
 		)
 	})
 
-	vol := volume.DefaultMixer().OutputFunc(func(v volume.Volume) bar.Output {
+	vol := volume.DefaultMixer().Output(func(v volume.Volume) bar.Output {
 		if v.Mute {
 			return outputs.
-				Pango(ionicons.Icon("volume-mute"), "MUT").
+				Pango(pango.Icon("mdi-volume-mute"), "MUT").
 				Color(colors.Scheme("degraded"))
 		}
 		iconName := "low"
@@ -209,13 +204,13 @@ func main() {
 			iconName = "medium"
 		}
 		return outputs.Pango(
-			ionicons.Icon("volume-"+iconName),
+			pango.Icon("mdi-volume-"+iconName),
 			spacer,
 			pango.Textf("%2d%%", pct),
 		)
 	})
 
-	loadAvg := sysinfo.New().OutputFunc(func(s sysinfo.Info) bar.Output {
+	loadAvg := sysinfo.New().Output(func(s sysinfo.Info) bar.Output {
 		out := outputs.Textf("%0.2f %0.2f", s.Loads[0], s.Loads[2])
 		// Load averages are unusually high for a few minutes after boot.
 		if s.Uptime < 10*time.Minute {
@@ -234,8 +229,8 @@ func main() {
 	})
 	loadAvg.OnClick(startTaskManager)
 
-	freeMem := meminfo.New().OutputFunc(func(m meminfo.Info) bar.Output {
-		out := outputs.Pango(material.Icon("memory"), outputs.IBytesize(m.Available()))
+	freeMem := meminfo.New().Output(func(m meminfo.Info) bar.Output {
+		out := outputs.Pango(pango.Icon("mdi-memory"), outputs.IBytesize(m.Available()))
 		freeGigs := m.Available().Gigabytes()
 		switch {
 		case freeGigs < 0.5:
@@ -266,85 +261,128 @@ func main() {
 				return nil
 			}
 		}).
-		OutputFunc(func(temp unit.Temperature) bar.Output {
+		Output(func(temp unit.Temperature) bar.Output {
 			return outputs.Pango(
-				materialCommunity.Icon("fan"), spacer,
+				pango.Icon("mdi-fan"), spacer,
 				pango.Textf("%2d℃", int(temp.Celsius())),
 			)
 		})
 
 	net := netspeed.New("eno1").
 		RefreshInterval(2 * time.Second).
-		OutputFunc(func(s netspeed.Speeds) bar.Output {
+		Output(func(s netspeed.Speeds) bar.Output {
 			return outputs.Pango(
-				materialCommunity.Icon("arrow-up"), spacer, pango.Textf("%5s", outputs.Byterate(s.Tx)),
-				pango.Span(" ", pango.Small),
-				materialCommunity.Icon("arrow-down"), spacer, pango.Textf("%5s", outputs.Byterate(s.Rx)),
+				pango.Icon("mdi-arrow-up"), spacer, pango.Textf("%5s", outputs.Byterate(s.Tx)),
+				spacer,
+				pango.Icon("mdi-arrow-down"), spacer, pango.Textf("%5s", outputs.Byterate(s.Rx)),
 			)
 		})
 
-	audioplayer := media.New("DeaDBeeF").OutputFunc(mediaFormatFunc)
-	wifi := wlan.New("wlp2s0").OutputFunc(func(w wlan.Info) bar.Output {
-		if w.SSID != "" {
-			return outputs.Pango(
-				material.Icon("wifi"), spacer,
-				pango.Textf("%s", w.SSID),
-			)
+	audioplayer := media.New("DeaDBeeF").Output(mediaFormatFunc)
+
+	wifi := wlan.Any().Output(func(w wlan.Info) bar.Output {
+		switch {
+		case w.Connected():
+			out := fmt.Sprintf("W: (%s)", w.SSID)
+			if len(w.IPs) > 0 {
+				out += fmt.Sprintf(" %s", w.IPs[0])
+			}
+			return outputs.Text(out).Color(colors.Scheme("good"))
+		case w.Connecting():
+			return outputs.Text("W: connecting...").Color(colors.Scheme("degraded"))
+		case w.Enabled():
+			return outputs.Text("W: down").Color(colors.Scheme("bad"))
+		default:
+			return nil
 		}
-		return outputs.Empty()
 	})
+
 	vpn := vpn.New("vpn0")
 
-	batt := battery.Default().OutputFunc(func(b battery.Info) bar.Output {
-		var pstate pango.Node
-		if b.PluggedIn() {
-			pstate = materialCommunity.Icon("power-plug")
-		} else {
-			pstate = materialCommunity.Icon("power-plug-off")
+	netinfo := netinfo.New().Output(func(s netinfo.State) bar.Output {
+		if !s.Enabled() {
+			return nil
 		}
-		out := outputs.Pango(pstate, pango.Textf("%d%%", b.RemainingPct()))
-		switch {
-		case b.RemainingTime() < time.Duration(5)*time.Minute:
-			out.Urgent(true)
-		case b.RemainingTime() < time.Duration(10)*time.Minute:
-			out.Color(colors.Scheme("bad"))
-		case b.RemainingTime() < time.Duration(30)*time.Minute:
-			out.Color(colors.Scheme("degraded"))
-		case b.RemainingTime() > time.Duration(45)*time.Minute:
-			out.Color(colors.Scheme("good"))
+		for _, ip := range s.IPs {
+			if ip.To4() == nil && ip.IsGlobalUnicast() {
+				return outputs.Text(ip.String()).Color(colors.Scheme("good"))
+			}
+		}
+		return outputs.Text("no IPv6").Color(colors.Scheme("bad"))
+	})
+
+	statusName := map[battery.Status]string{
+		battery.Charging:    "CHR",
+		battery.Discharging: "BAT",
+		battery.NotCharging: "NOT",
+		battery.Unknown:     "UNK",
+	}
+
+	batt := battery.All().Output(func(b battery.Info) bar.Output {
+		// Round to the nearest decimal
+		perc := math.Round(float64(b.RemainingPct())/float64(10)) * float64(10)
+		mode := ""
+		if b.Discharging() {
+			mode = ""
+		} else {
+			mode = "-charging"
+		}
+		icon := fmt.Sprintf("mdi-battery%s-%.0f", mode, perc)
+		if icon == "mdi-battery-100" {
+			icon = "mdi-battery"
+		} else if icon == "mdi-battery-0" {
+			icon = "mdi-battery-outline"
+		}
+
+		if b.Status == battery.Disconnected {
+			return nil
+		}
+
+		out := outputs.Pango(
+			pango.Icon(icon),
+			pango.Textf("%s %d%% %s",
+				statusName[b.Status],
+				b.RemainingPct(),
+				b.RemainingTime(),
+			),
+		)
+		if b.Discharging() {
+			if b.RemainingPct() < 20 || b.RemainingTime() < 30*time.Minute {
+				out.Color(colors.Scheme("bad"))
+			}
 		}
 		return out
 	})
 
-	thirtySeconds, _ := time.ParseDuration("30s")
-	backlight := funcs.Every(thirtySeconds, func(m funcs.Channel) {
-		maxBrightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/max_brightness")
-		brightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/brightness")
-		if err != nil {
-			m.Error(err)
-			return
-		}
-		level, err := strconv.ParseFloat(
-			strings.Trim(string(brightnessBytes), "\n "),
-			32,
-		)
-		maxLevel, err := strconv.ParseFloat(
-			strings.Trim(string(maxBrightnessBytes), "\n "),
-			32,
-		)
+	/* 	thirtySeconds, _ := time.ParseDuration("30s")
+	   	backlight := funcs.Every(thirtySeconds, func(m funcs.Channel) {
+	   		maxBrightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/max_brightness")
+	   		brightnessBytes, err := ioutil.ReadFile("/sys/class/backlight/intel_backlight/brightness")
+	   		if err != nil {
+	   			m.Error(err)
+	   			return
+	   		}
+	   		level, err := strconv.ParseFloat(
+	   			strings.Trim(string(brightnessBytes), "\n "),
+	   			32,
+	   		)
+	   		maxLevel, err := strconv.ParseFloat(
+	   			strings.Trim(string(maxBrightnessBytes), "\n "),
+	   			32,
+	   		)
 
-		if err != nil {
-			m.Error(err)
-			return
-		}
-		backlightPct := (level / maxLevel) * 100
+	   		if err != nil {
+	   			m.Error(err)
+	   			return
+	   		}
+	   		backlightPct := (level / maxLevel) * 100
 
-		m.Output(outputs.Pango(
-			materialCommunity.Icon("lightbulb"),
-			spacer,
-			pango.Textf("%.0f%%", backlightPct),
-		))
-	})
+	   		m.Output(outputs.Pango(
+	   			pango.Icon("lightbulb"),
+	   			spacer,
+	   			pango.Textf("%.0f%%", backlightPct),
+	   		))
+	   	}) */
 
 	g := group.Collapsing()
 
@@ -353,8 +391,9 @@ func main() {
 		g.Add(wifi),
 		g.Add(vpn),
 		g.Add(net),
+		g.Add(netinfo),
 		g.Add(temp),
-		g.Add(backlight),
+		//g.Add(backlight),
 		g.Add(freeMem),
 		g.Button(outputs.Text("+"), outputs.Text("-")),
 		loadAvg,
